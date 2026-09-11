@@ -1,0 +1,34 @@
+name: Deploy Website to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+
+          script: |
+            cd /home/ubuntu/devops-bootcamp
+
+            git pull origin main
+
+            docker stop mywebsite || true
+            docker rm mywebsite || true
+
+            docker build -t aws-devops-site .
+
+            docker run -d -p 80:80 --name mywebsite aws-devops-site
